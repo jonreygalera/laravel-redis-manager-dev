@@ -9,7 +9,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-          "Jonreyg\\LaravelRedisManager\\Tests\\": "tests"
+          "Jonreyg\\LaravelRedisManager\\Tests\\": "tests/"
         }
     },
     "authors": [

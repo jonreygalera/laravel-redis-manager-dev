@@ -23,7 +23,7 @@ class LaravelRedisManagerServiceProvider extends ServiceProvider
         if ($this->app->runningInConsole()) {
 
             $this->publishes([
-              __DIR__.'/../config/config.php' => config_path('laravel-redis-manager.php'),
+              __DIR__.'/../config/config.php' => config_path('redis-manager.php'),
             ], 'config');
         
           }
@@ -31,12 +31,12 @@ class LaravelRedisManagerServiceProvider extends ServiceProvider
 
     public function registerConfig()
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'laravel-redis-manager');
+        $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'redis-manager');
     }
 
     public function registerViews()
     {
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'laravel-redis-manager');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'redis-manager');
     }
 
     public function registerRoutes()

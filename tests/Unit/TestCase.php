@@ -1,6 +1,6 @@
 <?php
 
-namespace Jonreyg\LaravelRedisManager\Tests;
+namespace Jonreyg\LaravelRedisManager\Tests\Unit;
 
 use Jonreyg\LaravelRedisManager\LaravelRedisManagerServiceProvider;
 
