@@ -1,0 +1,1 @@
+php artisan vendor:publish --provider="Jonreyg\LaravelRedisManager\LaravelRedisManagerServiceProvider" --tag="config"

@@ -1,0 +1,38 @@
+{
+    "name": "jonreyg/laravel-redis-manager",
+    "description": "Redis caching manager for laravel",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Jonreyg\\LaravelRedisManager\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+          "Jonreyg\\LaravelRedisManager\\Tests\\": "tests"
+        }
+    },
+    "authors": [
+        {
+            "name": "Jon Rey Galera",
+            "email": "jonreygalera@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php" : "^8.0|^8.1",
+        "illuminate/support": "^9.0",
+        "predis/predis": "^2.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Jonreyg\\LaravelRedisManager\\LaravelRedisManagerServiceProvider"
+            ]
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "orchestra/testbench": "^7.0"
+    }
+}
