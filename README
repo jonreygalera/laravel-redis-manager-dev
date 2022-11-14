@@ -1,1 +1,2 @@
 php artisan vendor:publish --provider="Jonreyg\LaravelRedisManager\LaravelRedisManagerServiceProvider" --tag="config"
+'client' => env('REDIS_CLIENT', 'predis')
