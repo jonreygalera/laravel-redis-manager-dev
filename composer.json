@@ -3,6 +3,9 @@
     "description": "Redis caching manager for laravel",
     "type": "library",
     "autoload": {
+        "files": [
+            "src/Helpers/functions.php"
+        ],
         "psr-4": {
             "Jonreyg\\LaravelRedisManager\\": "src/"
         }

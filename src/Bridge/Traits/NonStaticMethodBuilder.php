@@ -11,8 +11,11 @@ trait NonStaticMethodBuilder
     {
         $command = null;
         switch($name) {
-            case Keywords::insert: 
-                $command = 'hmsetCommand';
+            case Keywords::INSERT: 
+                $command = 'insertQuery';
+            break; 
+            case Keywords::MULTISERT: 
+                $command = 'insertQuery';
             break; 
         }
         

@@ -15,7 +15,7 @@ trait StaticMethodBuilder
         $object = new $class;
         switch(self::$static_method) {
             case Keywords::INSERT: return $object->insertQuery(...func_get_args());
-            case Keywords::MULTISERT: return $object->multinsertQuery(...func_get_args());
+            case Keywords::MULTISERT: return $object->multisertQuery(...func_get_args());
         }
     }
 

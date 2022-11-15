@@ -8,21 +8,21 @@ trait Commands
 {    
     public function hmsetCommand(array $data)
     {
+        config(['database.redis.options.prefix' => '']);
         if (!is_array($this->field_key_column)) throw new \Exception('Field key column must be an array.');
         $folder = $this->folder;
-
+        $columns = $this->field_key_column;
         foreach($data as $key => $value) {
             $field_key = gettype($value) == 'array' ? $value[$this->hash_key] : $value->{$this->hash_key};
-            dd($field_key, $value);
-            $save = $this->array_key_map($value);
+
+            $save = array_map_key($value, $columns);
             $set_key = $folder.":{$field_key}";
 
-            // Redis::hmset($set_key, $save);
+            Redis::hmset($set_key, $save);
 
-            // if ($this->with_expiration) {
-            //     Redis::expire($set_key, $this->expire_at);
-            // }
-            dd($set_key, $save);
+            if ($this->with_expiration) {
+                Redis::expire($set_key, $this->expire_at);
+            }
         }
 
         return $this;
