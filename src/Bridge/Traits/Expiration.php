@@ -6,72 +6,72 @@ trait Expiration {
     public $expire_at = 3600;
     public $with_expiration = TRUE;
 
-    public function addExpiration(float $seconds)
+    public function addExpirationCommand(float $seconds)
     {
         $this->with_expiration = TRUE;
         $this->expire_at = (int) $seconds;
         return $this;
     }
 
-    public function expireHours(float $hours)
+    public function expireHoursCommand(float $hours)
     {
         $seconds = $hours * 60 * 60;
-        return $this->addExpiration($seconds);
+        return $this->addExpirationCommand($seconds);
     }
 
-    public function expireHour()
+    public function expireHourCommand()
     {
-        return $this->expireHours(1);
+        return $this->expireHoursCommand(1);
     }
 
-    public function expireHalfHour()
+    public function expireHalfHourCommand()
     {
         return $this->expireHours(0.5);
     }
 
-    public function expireDays(float $days)
+    public function expireDaysCommand(float $days)
     {
         $hours = $days * 24;
         return $this->expireHours($hours);
     }
 
-    public function expireDay()
+    public function expireDayCommand()
     {
-        return $this->expireDays(1);
+        return $this->expireDaysCommand(1);
     }
 
-    public function expireWeek()
+    public function expireWeekCommand()
     {
-        return $this->expireWeeks(1);
+        return $this->expireWeeksCommand(1);
     }
 
-    public function expireWeeks(float $weeks)
+    public function expireWeeksCommand(float $weeks)
     {
         $week = 7 * $weeks;
         $seconds = (3600 * 24) * $week;
-        return $this->addExpiration($seconds);
+        return $this->addExpirationCommand($seconds);
     }
 
-    public function expireMinutes(float $minutes)
+    public function expireMinutesCommand(float $minutes)
     {
         $seconds = $minutes * 60;
-        return $this->addExpiration($seconds);
+        return $this->addExpirationCommand($seconds);
     }
 
-    public function expireMinute()
+    public function expireMinuteCommand()
     {
-        return $this->expireMinutes(1);
+        return $this->expireMinutesCommand(1);
     }
 
-    public function expireYears(float $years)
+    public function expireYearsCommand(float $years)
     {
         $seconds = 31556952 * $years;
-        return $this->addExpiration($seconds);
+        return $this->addExpirationCommand($seconds);
     }
 
-    public function expireYear()
+    public function expireYearCommand()
     {
         $seconds = 31556952;
-        return $this->expireYears($seconds);
+        return $this->expireYearsCommand($seconds);
     }
 }

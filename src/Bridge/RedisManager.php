@@ -5,13 +5,14 @@ namespace Jonreyg\LaravelRedisManager\Bridge;
 use Jonreyg\LaravelRedisManager\Bridge\Model\Relations;
 use Jonreyg\LaravelRedisManager\Bridge\DataType;
 use Jonreyg\LaravelRedisManager\Exceptions\PropertyException;
+use Illuminate\Support\Facades\Redis;
 
 abstract class RedisManager extends Relations
 {
-    use Traits\Commands,
-        Traits\Expiration,
-        Traits\StaticMethodBuilder,
-        Traits\NonStaticMethodBuilder;
+    use Traits\StaticMethodBuilder,
+        Traits\NonStaticMethodBuilder,
+        Traits\Commands,
+        Traits\Expiration;
 
     const HASH_KEY_ALL = '*';
 
@@ -24,7 +25,7 @@ abstract class RedisManager extends Relations
     
     public function __construct()
     {
-        // $namespace = explode('\\', get_called_class());
+          // $namespace = explode('\\', get_called_class());
         $this->checkFolderProperty()
             ->checkHasKeyProperty()
             ->checkFieldKeyColumnProperty();

@@ -17,8 +17,47 @@ trait NonStaticMethodBuilder
             case Keywords::MULTISERT: 
                 $command = 'insertQuery';
             break; 
+            case Keywords::KEYS: 
+                $command = 'keysCommand';
+            break; 
+            case Keywords::ADDEXPIRATION:
+                $command = 'addExpirationCommand';
+            break;
+            case Keywords::EXPIREHOURS:
+                $command = 'expireHoursCommand';
+            break;
+            case Keywords::EXPIREHOUR:
+                $command = 'expireHourCommand';
+            break;
+            case Keywords::EXPIREHALFHOUR:
+                $command = 'expireHalfHourCommand';
+            break;
+            case Keywords::EXPIREDAYS:
+                $command = 'expireDaysCommand';
+            break;
+            case Keywords::EXPIREDAY:
+                $command = 'expireDayCommand';
+            break;
+            case Keywords::EXPIREWEEK:
+                $command = 'expireWeekCommand';
+            break;
+            case Keywords::EXPIREWEEKS:
+                $command = 'expireWeeksCommand';
+            break;
+            case Keywords::EXPIREMINUTES:
+                $command = 'expireMinutesCommand';
+            break;
+            case Keywords::EXPIREMINUTE:
+                $command = 'expireMinuteCommand';
+            break;
+            case Keywords::EXPIREYEARS:
+                $command = 'expireYearsCommand';
+            break;
+            case Keywords::EXPIREYEAR:
+                $command = 'expireYearCommand';
+            break;            
         }
         
-        call_user_func(array($this, $command), ...$arguments);
+        return call_user_func(array($this, $command), ...$arguments);
     }
 }

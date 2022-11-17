@@ -12,21 +12,46 @@ trait Commands
         if (!is_array($this->field_key_column)) throw new \Exception('Field key column must be an array.');
         $folder = $this->folder;
         $columns = $this->field_key_column;
-        foreach($data as $key => $value) {
-            $field_key = gettype($value) == 'array' ? $value[$this->hash_key] : $value->{$this->hash_key};
-
-            $save = array_map_key($value, $columns);
-            $set_key = $folder.":{$field_key}";
-
-            Redis::hmset($set_key, $save);
-
-            if ($this->with_expiration) {
-                Redis::expire($set_key, $this->expire_at);
+       
+        Redis::pipeline(function($pipe) use($data, $folder, $columns) {
+            foreach($data as $key => $value) {
+                $field_key = gettype($value) == 'array' ? $value[$this->hash_key] : $value->{$this->hash_key};
+    
+                $save = array_map_key($value, $columns);
+                $set_key = $folder.":{$field_key}";
+    
+                $pipe->hmset($set_key, $save);
+    
+                if ($this->with_expiration) {
+                    $pipe->expire($set_key, $this->expire_at);
+                }
             }
-        }
-
+    
+        });
         return $this;
     }
+
+    public function keysCommand()
+    {
+        // return Redis::keys($this->folder.":".self::HASH_KEY_ALL);
+        return [$this->folder.":".self::HASH_KEY_ALL, Redis::keys('user:1')];
+    }
+
+    // public function hgetallCommand($hash_key_value = null)
+    // {
+    //     $new_data = [];
+    //     $folder = $this->folder;
+    //     $folder .=  $hash_key_value ? ":{$hash_key_value}" : '';
+
+    //     if ($hash_key_value != self::HASH_KEY_ALL) return Redis::hgetall($folder);
+
+    //     $keys = $this->_keys();
+
+    //     foreach($keys as $key) {
+    //         $new_data[] = \Redis::hgetall($key);
+    //     }
+    //     return $new_data;
+    // }
 
     // public function _hmget($hash_key_value, array $fields = [])
     // {
