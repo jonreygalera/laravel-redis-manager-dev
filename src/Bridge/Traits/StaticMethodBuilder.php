@@ -2,24 +2,23 @@
 
 namespace Jonreyg\LaravelRedisManager\Bridge\Traits;
 
-use Illuminate\Support\Facades\Redis;
+use Jonreyg\LaravelRedisManager\Redis;
 use Jonreyg\LaravelRedisManager\Bridge\Keywords;
 
 trait StaticMethodBuilder
 {
     private static $static_method = '';
+    private static $class = '';
 
     public static function staticBuilder()
     {
-        $class = get_called_class();
-        $object = new $class;
-
+        $object = new self::$class;
+        
         switch(self::$static_method) {
             // Query
             case Keywords::INSERT: return $object->insertQuery(...func_get_args());
-            case Keywords::MULTISERT: return $object->multisertQuery(...func_get_args());
-            // Redis
-            case Keywords::KEYS: return $object->keysCommand(...func_get_args());
+            case Keywords::ALL: return $object->allQuery(...func_get_args());
+
             // Expiration
             case Keywords::ADDEXPIRATION: return $object->addExpirationCommand(...func_get_args());
             case Keywords::EXPIREHOURS: return $object->expireHoursCommand(...func_get_args());
@@ -38,7 +37,8 @@ trait StaticMethodBuilder
 
     public static function __callStatic($name, $arguments)
     {
+        self::$class = get_called_class();
         self::$static_method = $name;
-        return call_user_func(array(get_called_class(), 'staticBuilder'), ...$arguments);
+        return call_user_func(array(self::$class, 'staticBuilder'), ...$arguments);
     }
 }

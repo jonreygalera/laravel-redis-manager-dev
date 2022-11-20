@@ -30,4 +30,25 @@ class DataType
 
         return true;
     }
+
+
+    public static function parse(array $data, array $field_key_column)
+    {
+        $parse_data = [];
+        foreach($field_key_column as $key => $value)
+        {
+            if(array_key_exists($key, $data)) {
+                $_data = $data[$key];
+
+                if ($value == 'array') {
+                    $_data = json_decode($_data, TRUE);
+                } else {
+                    settype($_data, $value);
+                }
+                $parse_data[$key] = $_data;
+            }
+        }
+
+        return $parse_data;
+    }
 }

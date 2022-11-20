@@ -6,10 +6,10 @@ abstract class Keywords
 {
     // Query
     const INSERT = 'insert';
-    const MULTISERT = 'multisert';
+    const ALL = 'all';
 
-    // Redis
-    const KEYS = 'keys';
+    // Utility
+    const FALLBACK = 'fallback';
 
     // Expiration
     const ADDEXPIRATION = 'addExpiration';

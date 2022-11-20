@@ -2,7 +2,7 @@
 
 namespace Jonreyg\LaravelRedisManager\Bridge\Traits;
 
-use Illuminate\Support\Facades\Redis;
+use Jonreyg\LaravelRedisManager\Redis;
 use Jonreyg\LaravelRedisManager\Bridge\Keywords;
 
 trait NonStaticMethodBuilder
@@ -11,15 +11,15 @@ trait NonStaticMethodBuilder
     {
         $command = null;
         switch($name) {
+            // Query
             case Keywords::INSERT: 
                 $command = 'insertQuery';
             break; 
-            case Keywords::MULTISERT: 
-                $command = 'insertQuery';
+            case Keywords::ALL: 
+                $command = 'allQuery';
             break; 
-            case Keywords::KEYS: 
-                $command = 'keysCommand';
-            break; 
+
+            // Expiration
             case Keywords::ADDEXPIRATION:
                 $command = 'addExpirationCommand';
             break;
@@ -57,7 +57,7 @@ trait NonStaticMethodBuilder
                 $command = 'expireYearCommand';
             break;            
         }
-        
+
         return call_user_func(array($this, $command), ...$arguments);
     }
 }

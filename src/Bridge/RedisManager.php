@@ -5,13 +5,14 @@ namespace Jonreyg\LaravelRedisManager\Bridge;
 use Jonreyg\LaravelRedisManager\Bridge\Model\Relations;
 use Jonreyg\LaravelRedisManager\Bridge\DataType;
 use Jonreyg\LaravelRedisManager\Exceptions\PropertyException;
-use Illuminate\Support\Facades\Redis;
+use Jonreyg\LaravelRedisManager\Redis;
 
 abstract class RedisManager extends Relations
 {
     use Traits\StaticMethodBuilder,
         Traits\NonStaticMethodBuilder,
         Traits\Commands,
+        Traits\Utility,
         Traits\Expiration;
 
     const HASH_KEY_ALL = '*';
@@ -19,16 +20,26 @@ abstract class RedisManager extends Relations
     protected $folder;
     protected $hash_key = 'id'; // the value was taken to and must be present in $field_key_column
     protected $field_key_column = [];
-    protected $save_folder_name = true;
-    protected $skip_empty = true;
-    public $redis_on = true;
+
+    public $result = [];
+
+    // protected $save_folder_name = true;
+    // protected $skip_empty = true;
+    // public $redis_on = true;
     
     public function __construct()
     {
+        config(['database.redis.options.prefix' => '']);
+        Redis::checkRedisConnection();
           // $namespace = explode('\\', get_called_class());
         $this->checkFolderProperty()
-            ->checkHasKeyProperty()
-            ->checkFieldKeyColumnProperty();
+            ->checkFieldKeyColumnProperty()
+            ->checkHasKeyProperty();
+    }
+
+    public function canProceedWhenDown()
+    {
+        return Redis::canProceedWhenDown();
     }
 
     public function checkFolderProperty()
