@@ -6,7 +6,14 @@ abstract class Keywords
 {
     // Query
     const INSERT = 'insert';
+    const FIND_OR_CREATE = 'findOrCreate';
+    const WHERE = 'where';
+
+    // Commands
     const ALL = 'all';
+    const EXISTS = 'exists';
+    const DELETE = 'delete';
+    const FIND = 'find';
 
     // Utility
     const FALLBACK = 'fallback';

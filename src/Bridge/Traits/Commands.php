@@ -5,6 +5,7 @@ namespace Jonreyg\LaravelRedisManager\Bridge\Traits;
 use Jonreyg\LaravelRedisManager\Exceptions\HashKeyException;
 use Jonreyg\LaravelRedisManager\Redis;
 use Jonreyg\LaravelRedisManager\Bridge\DataType;
+use Exception;
 
 trait Commands
 {    
@@ -38,9 +39,10 @@ trait Commands
        });
     }
 
-    public function keysCommand()
+    public function keysCommand($hash_key_value = null)
     {
-        return Redis::keys($this->folder.":".self::HASH_KEY_ALL);
+        $hash_key_value = $hash_key_value ? $hash_key_value : self::HASH_KEY_ALL;
+        return Redis::keys($this->folder.":" . $hash_key_value);
     }
 
     public function hgetallCommand(callable $fallback = null)
@@ -56,59 +58,34 @@ trait Commands
         }, $fallback)->get();
     }
 
-    // public function _hmget($hash_key_value, array $fields = [])
-    // {
-    //     $folder = $this->folder;
-    //     $folder .=  $hash_key_value ? ":{$hash_key_value}" : '';
-    //     $fields = count($fields) === 0 ? array_keys($this->field_key_column) : $fields;
-    //     return \Redis::hmget($folder, $fields);
-    // }
+    public function findCommand($hash_key_value, callable $fallback = null)
+    {
+        return $this->ductCommand(function() use($hash_key_value, $fallback) {
+            $new_data = [];
+            $keys = $this->keysCommand($hash_key_value);
+            foreach($keys as $key) {
+                $new_data[] = DataType::parse(Redis::hgetall($key), $this->field_key_column);
+            }
+            
+            if(empty($new_data)) {
+                $fallback_data = $fallback();
+                if(!is_array($fallback_data)) throw new Exception("Fallback data must be an array.");
+                if(!array_key_exists($this->hash_key, $fallback_data)) throw new Exception("Hash key `{$this->hash_key}` not found.");
+                if (!($fallback_data[$this->hash_key] === $hash_key_value)) throw new Exception("hash key value `{$hash_key_value}` did not match to the fallback data `{$this->hash_key}` value.");;
+            }
 
-    // public function _hgetall($hash_key_value = null)
-    // {
-    //     $new_data = [];
-    //     $folder = $this->folder;
-    //     $folder .=  $hash_key_value ? ":{$hash_key_value}" : '';
+            return $this->dataCheckerCommand($new_data, $fallback);
+        }, $fallback)->first();
+    }
 
-    //     if ($hash_key_value != self::HASH_KEY_ALL) return \Redis::hgetall($folder);
+    public function existsCommand($hash_key_value)
+    {
+        $folder = "{$this->folder}:{$hash_key_value}";
+        return boolval(Redis::exists($folder));
+    }
 
-    //     $keys = $this->_keys();
-
-    //     foreach($keys as $key) {
-    //         $new_data[] = \Redis::hgetall($key);
-    //     }
-    //     return $new_data;
-    // }
-
-
-    // public function _exists($folder = null)
-    // {
-    //     $folder = $folder ?? $this->folder;
-
-    //     return boolval(\Redis::exists($folder));
-    // }
-
-    // public function _hexists($field_key)
-    // {
-    //     if (!$this->_exists()) return false;
-
-    //     $folder = $this->folder;
-
-    //     return boolval(\Redis::hexists("{$folder}", $field_key));
-    // }
-
-    // public function _keys()
-    // {
-    //     return \Redis::keys($this->folder.":".self::HASH_KEY_ALL);
-    // }
-
-    // protected function _flushDB()
-    // {
-    //     return \Redis::flushDB();
-    // }
-
-    // public function _del($field_key)
-    // {
-    //     return \Redis::del("{$this->folder}:{$field_key}");
-    // }
+    public function deleteCommand($hash_key_value)
+    {
+        return Redis::del("{$this->folder}:{$hash_key_value}");
+    }
 }

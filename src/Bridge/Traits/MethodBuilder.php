@@ -4,20 +4,28 @@ namespace Jonreyg\LaravelRedisManager\Bridge\Traits;
 
 use Jonreyg\LaravelRedisManager\Redis;
 use Jonreyg\LaravelRedisManager\Bridge\Keywords;
+use Exception;
 
-trait StaticMethodBuilder
+trait MethodBuilder
 {
     private static $static_method = '';
     private static $class = '';
 
-    public static function staticBuilder()
+    public static function methodBuilder()
     {
         $object = new self::$class;
         
         switch(self::$static_method) {
             // Query
             case Keywords::INSERT: return $object->insertQuery(...func_get_args());
-            case Keywords::ALL: return $object->allQuery(...func_get_args());
+            case Keywords::FIND_OR_CREATE: return $object->findOrCreateQuery(...func_get_args());
+            case Keywords::WHERE: return $object->whereQuery(...func_get_args());
+            
+            // Commands
+            case Keywords::ALL: return $object->hgetallCommand(...func_get_args());
+            case Keywords::EXISTS: return $object->existsCommand(...func_get_args());
+            case Keywords::DELETE: return $object->deleteCommand(...func_get_args());
+            case Keywords::FIND: return $object->findCommand(...func_get_args());
 
             // Expiration
             case Keywords::ADDEXPIRATION: return $object->addExpirationCommand(...func_get_args());
@@ -39,6 +47,13 @@ trait StaticMethodBuilder
     {
         self::$class = get_called_class();
         self::$static_method = $name;
-        return call_user_func(array(self::$class, 'staticBuilder'), ...$arguments);
+        return call_user_func(array(self::$class, 'methodBuilder'), ...$arguments);
+    }
+
+    public function __call($name, $arguments)
+    {
+        self::$class = get_called_class();
+        self::$static_method = $name;
+        return call_user_func(array(self::$class, 'methodBuilder'), ...$arguments);
     }
 }

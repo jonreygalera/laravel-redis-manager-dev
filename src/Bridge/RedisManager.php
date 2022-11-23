@@ -9,8 +9,7 @@ use Jonreyg\LaravelRedisManager\Redis;
 
 abstract class RedisManager extends Relations
 {
-    use Traits\StaticMethodBuilder,
-        Traits\NonStaticMethodBuilder,
+    use Traits\MethodBuilder,
         Traits\Commands,
         Traits\Utility,
         Traits\Expiration;

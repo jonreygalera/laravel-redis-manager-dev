@@ -6,9 +6,16 @@ use Jonreyg\LaravelRedisManager\Redis;
 
 trait Utility
 {
-    public function fallbackCommand(callable $callable)
+    public function always(callable $callable)
     {
-        return $this->insertQuery($callable($this));
+        $callable($this);
+        return $this;
+    }
+    
+    public function fallback(callable $callable)
+    {
+        $data = $callable($this);
+        return $this->insertQuery($data);
     }
 
     public function dataCheckerCommand(array $data, callable $callable = null)
@@ -20,11 +27,10 @@ trait Utility
 
         if (!empty($data)) {
             $this->result = $data;
+            return $this;
         } else {
-            $this->fallbackCommand($callable);
+            return $this->fallback($callable);
         }
-
-        return $this;
     }
 
     public function ductCommand(callable $callable, callable $fallback = null)
@@ -32,10 +38,8 @@ trait Utility
         if (Redis::canProceedOnDown()) {
             $this->result = ($fallback) ? $fallback($this) : [];
         } else {
-            $callable($this);
+            return $callable($this);
         }
-
-        return $this;
     }
 
     public function first($fields = [])
