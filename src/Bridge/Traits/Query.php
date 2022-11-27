@@ -6,45 +6,50 @@ use Exception;
 
 trait Query 
 {  
-    use Operators;
+    use Operators, Relations;
 
-    public function insertQuery(array $data)
+    public function insertCommand(array $data)
     {
         $data = is_multi_array($data) ? $data : [$data];
         return $this->hmsetCommand($data);
     }
 
 
-    public function findOrCreateQuery($hash_key_value, array $data)
+    public function findOrCreateCommand($hash_key_value, array $data)
     {
         return $this->findCommand($hash_key_value, function() use($data) {
             return $data;
         });
     }
 
-    public function whereQuery(array $search, callable $fallback = null)
+    public function whereCommand(array $search, callable $fallback = null, bool $is_or = FALSE)
     {
-        $this_data = $this->result;
+        $this_data = (empty($this->result)) ? $this->allCommand() : $this->result;
 
-        if (empty($this_data)) {
-            $this_data = $this->all();
-        }
-
-        $this->result = array_filter($this_data, function($data) use($search) {
+        $this->result = array_filter($this_data, function($data) use($search, $is_or) {
             foreach ($search as $key => $value) {
                 if (array_key_exists($key, $data)) {
                     $column = $data[$key];
-
                     if (is_array($value)) {
                         if (empty($value)) throw new Exception('Error: unknown Redis Manager operator');
                         if (!(array_key_exists(0, $value)) || !(array_key_exists(1, $value))) throw new Exception('Error: missing format');
                         $is_good = $this->whereData($value[0], $column, $value[1]);
-                        if($is_good) continue;
+                        if($is_good) {
+                            if ($is_or) {
+                                return true;
+                            } else {
+                                continue;
+                            }
+                        }
                         return false;
 
                     } else {
                         if($column == $value) {
-                            continue;
+                            if ($is_or) {
+                                return true;
+                            } else {
+                                continue;
+                            }
                         } 
                         return false;
                     }
@@ -57,108 +62,78 @@ trait Query
 
         if (empty($this->result) && !is_null($fallback)) {
             $this->fallback($fallback)
-                ->whereQuery($search);
+                ->whereCommand($search);
         }
 
         return $this;
     }
 
-    // public function orWhere(array $search, $fallback = null)
-    // {
-    //     $this_data = $this->result;
+    public function orWhereCommand(array $search, $fallback = null)
+    {
+        return $this->whereCommand($search, $fallback, TRUE);
+    }
 
-    //     if (empty($this_data)) {
-    //         $this_data = $this->allByFolder();
-    //     }
+    public function whereInCommand($field_key, array $find, $fallback = null)
+    {
+        $this_data = $this->result;
 
-    //     $this->result = array_filter($this_data, function($data) use($search) {
-    //         foreach ($search as $key => $value) {
-    //             if (array_key_exists($key, $data)) {
-    //                 $column = (gettype($data) === 'array') ? $data[$key] : $data->{$key};
-    //                 if (is_array($value)) {
-    //                     if (empty($value)) throw new \Exception('Error: unknown Redis Manager operator');
-    //                     if (!(array_key_exists(0, $value)) || !(array_key_exists(1, $value))) throw new \Exception('Error: missing format');
-    //                     $is_good = $this->whereData($value[0], $column, $value[1]);
-    //                     if($is_good) return true;
+        if (empty($this_data)) {
+            $this_data = $this->allCommand();
+        }
 
-    //                 } else {
-    //                     if($column == $value) {
-    //                         return true;
-    //                     } 
-    //                 }
-                   
-    //             } else throw new \Exception('Redis: Unknown field key');
-    //         }
+        $this->result = array_filter($this_data, function($data) use($field_key, $find) {
+            if (array_key_exists($field_key, $data)) {
 
-    //         return false;
-    //     });
-        
-    //     if ($fallback) {
-    //         return $this->fallback($fallback);
-    //     }
+                if (in_array($data[$field_key], $find)) return true;
 
-    //     return $this;
-    // }
+            } else return false;
 
-    // public function whereIn($field_key, array $find, $fallback = null)
-    // {
-    //     $this_data = $this->result;
+            return false;
+        });
 
-    //     if (empty($this_data)) {
-    //         $this_data = $this->allByFolder();
-    //     }
+        if (empty($this->result) && !is_null($fallback)) {
+            $this->fallback($fallback)
+                ->whereCommand($search);
+        }
 
-    //     $this->result = array_filter($this_data, function($data) use($field_key, $find) {
-    //         if (array_key_exists($field_key, $data)) {
+        return $this;
+    }
 
-    //             if (in_array($data[$field_key], $find)) return true;
+    public function whereBetweenCommand($field_key, array $values, $fallback = null)
+    {
+        $this_data = $this->result;
 
-    //         } else throw new \Exception('Redis: Unknown field key');
+        if (empty($this_data)) {
+            $this_data = $this->allCommand();
+        }
 
-    //         return false;
-    //     });
+        if (gettype($values[0]) != gettype($values[1])) throw new Exception('value must have the same type.');
 
-    //     if ($fallback) {
-    //         return $this->fallback($fallback);
-    //     }
+        $is_string = gettype($values[0]) === 'string';
 
-    //     return $this;
-    // }
+        $start_value = $is_string ? strtotime($values[0]) : $values[0];
+        $end_value = $is_string ? strtotime($values[1]) : $values[1];
 
-    // public function whereBetween($field_key, array $values, $fallback = null)
-    // {
-    //     $this_data = $this->result;
+        $this->result = array_filter($this_data, function($data) use($field_key, $start_value, $end_value, $is_string) {
+            if (array_key_exists($field_key, $data)) {
+                if($is_string) {
+                    $compare = strtotime($data[$field_key]);
+                    if ($start_value <= $compare && $compare <= $end_value) return true;
+                } else {
+                    $compare = $data[$field_key];
+                    if ($start_value <= $compare && $compare <= $end_value) return true;
+                }
+            } else return false;
 
-    //     if (empty($this_data)) {
-    //         $this_data = $this->allByFolder();
-    //     }
+            return false;
+        });
 
-    //     if (gettype($values[0]) != gettype($values[1])) throw new \Exception('value must have the same type.');
+        if (empty($this->result) && !is_null($fallback)) {
+            $this->fallback($fallback)
+                ->whereCommand($search);
+        }
 
-    //     $is_string = gettype($values[0]) === 'string';
-
-    //     $start_value = $is_string ? strtotime($values[0]) : $values[0];
-    //     $end_value = $is_string ? strtotime($values[1]) : $values[1];
-
-    //     $this->result = array_filter($this_data, function($data) use($field_key, $start_value, $end_value, $is_string) {
-    //         if (array_key_exists($field_key, $data)) {
-    //             if($is_string) {
-    //                 $compare = strtotime($data[$field_key]);
-    //                 if ($start_value <= $compare && $compare <= $end_value) return true;
-    //             } else {
-    //                 $compare = $data[$field_key];
-    //                 if ($start_value >= $compare && $compare <= $end_value) return true;
-    //             }
-    //         } else throw new \Exception('Redis: Unknown field key');
-
-    //         return false;
-    //     });
-
-    //     if ($fallback) {
-    //         return $this->fallback($fallback);
-    //     }
-
-    //     return $this;
-    // }
+        return $this;
+    }
 
 }

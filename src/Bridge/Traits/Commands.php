@@ -55,7 +55,12 @@ trait Commands
             }
 
             return $this->dataCheckerCommand($new_data, $fallback);
-        }, $fallback)->get();
+        }, $fallback)->getCommand();
+    }
+
+    public function allCommand(callable $fallback = null)
+    {
+        return $this->hgetallCommand($fallback);
     }
 
     public function findCommand($hash_key_value, callable $fallback = null)
@@ -75,7 +80,7 @@ trait Commands
             }
 
             return $this->dataCheckerCommand($new_data, $fallback);
-        }, $fallback)->first();
+        }, $fallback)->firstCommand();
     }
 
     public function existsCommand($hash_key_value)
@@ -87,5 +92,10 @@ trait Commands
     public function deleteCommand($hash_key_value)
     {
         return Redis::del("{$this->folder}:{$hash_key_value}");
+    }
+
+    public function flushCommand()
+    {
+        return Redis::flushDB();
     }
 }

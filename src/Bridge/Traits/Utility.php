@@ -15,7 +15,7 @@ trait Utility
     public function fallback(callable $callable)
     {
         $data = $callable($this);
-        return $this->insertQuery($data);
+        return $this->insertCommand($data);
     }
 
     public function dataCheckerCommand(array $data, callable $callable = null)
@@ -42,13 +42,15 @@ trait Utility
         }
     }
 
-    public function first($fields = [])
+    public function firstCommand($fields = [])
     {
-        return current($this->get($fields)) ?? [];
+        return current($this->getCommand($fields)) ? current($this->getCommand($fields)) : null;
     }
 
-    public function get($fields = [])
+    public function getCommand($fields = [])
     {
+        $this->result = empty($this->result) ? $this->allCommand() : $this->result;
+
         $fields = is_array($fields) ? $fields : func_get_args();
         if (empty($fields)) return $this->result;
 

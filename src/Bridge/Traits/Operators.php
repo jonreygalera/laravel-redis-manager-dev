@@ -12,7 +12,7 @@ trait Operators
 
     public $operators = [
         '=', '==', '===', '<', '>', '<=', '>=', '<>', '!=', '<=>',
-        'contain', 'regexp'
+        'contains', 'regexp'
     ];
 
     public function whereData($operator, $operand, $_operand)
@@ -70,7 +70,7 @@ trait Operators
         return false;
     }
 
-    public function containOperator($operand, $_operand)
+    public function containsOperator($operand, $_operand)
     {
         return Str::contains($operand, $_operand);
     }
@@ -90,7 +90,7 @@ trait Operators
         if ($operator == '>') return $this->greaterOperator($operand, $_operand);
         if ($operator == '>=') return $this->greaterEqualOperator($operand, $_operand);
         if ($operator == '<=>') return $this->spaceshipOperator($operand, $_operand);
-        if ($operator == 'contain') return $this->containOperator($operand, $_operand);
+        if ($operator == 'contains') return $this->containsOperator($operand, $_operand);
         if ($operator == 'regexp') return $this->regexpOperator($operand, $_operand);
 
         throw new Exception('Error: unknown redis manager operator');

@@ -2,15 +2,14 @@
 
 namespace Jonreyg\LaravelRedisManager\Bridge;
 
-use Jonreyg\LaravelRedisManager\Bridge\Model\Relations;
+use Jonreyg\LaravelRedisManager\Bridge\Model\DBLanguage;
 use Jonreyg\LaravelRedisManager\Bridge\DataType;
 use Jonreyg\LaravelRedisManager\Exceptions\PropertyException;
 use Jonreyg\LaravelRedisManager\Redis;
 
-abstract class RedisManager extends Relations
+abstract class RedisManager extends DBLanguage
 {
-    use Traits\MethodBuilder,
-        Traits\Commands,
+    use Traits\Commands,
         Traits\Utility,
         Traits\Expiration;
 
@@ -21,7 +20,6 @@ abstract class RedisManager extends Relations
     protected $field_key_column = [];
 
     public $result = [];
-
     // protected $save_folder_name = true;
     // protected $skip_empty = true;
     // public $redis_on = true;
@@ -63,5 +61,17 @@ abstract class RedisManager extends Relations
         DataType::checkColumn($this->field_key_column);
 
         return $this;
+    }
+
+    public static function __callStatic($name, $arguments)
+    {
+        $method ="{$name}Command";
+        return (new static)->$method(...$arguments);
+    }
+
+    public function __call($name, $arguments)
+    {
+        $method ="{$name}Command";
+        return $this->$method(...$arguments);
     }
 }
