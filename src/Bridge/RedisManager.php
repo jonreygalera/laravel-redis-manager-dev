@@ -6,6 +6,7 @@ use Jonreyg\LaravelRedisManager\Bridge\Model\DBLanguage;
 use Jonreyg\LaravelRedisManager\Bridge\DataType;
 use Jonreyg\LaravelRedisManager\Exceptions\PropertyException;
 use Jonreyg\LaravelRedisManager\Redis;
+use Illuminate\Support\Str;
 
 abstract class RedisManager extends DBLanguage
 {
@@ -20,7 +21,8 @@ abstract class RedisManager extends DBLanguage
     protected $field_key_column = [];
 
     public $result = [];
-    // protected $save_folder_name = true;
+    protected $save_folder_name = true;
+    protected $folder_description = '';
     // protected $skip_empty = true;
     // public $redis_on = true;
     
@@ -28,10 +30,13 @@ abstract class RedisManager extends DBLanguage
     {
         config(['database.redis.options.prefix' => '']);
         Redis::checkRedisConnection();
-          // $namespace = explode('\\', get_called_class());
         $this->checkFolderProperty()
             ->checkFieldKeyColumnProperty()
             ->checkHasKeyProperty();
+    
+        if ($this->save_folder_name) {
+            (new RedisFolder)->store([ 'folder_name' => $this->folder, 'folder_description' => $this->folder_description ]);
+        }
     }
 
     public function canProceedWhenDown()

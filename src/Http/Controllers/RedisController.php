@@ -2,22 +2,41 @@
 
 namespace Jonreyg\LaravelRedisManager\Http\Controllers;
 
-use Illuminate\Support\Facades\Redis;
+use Jonreyg\LaravelRedisManager\Redis;
+use Jonreyg\LaravelRedisManager\Bridge\RedisFolder;
+use Throwable;
+use Exception;
 
 class RedisController extends Controller 
 {
     public function ping()
     {
         try{
-            $redisConnection = Redis::connection('default');
-            dd('yes');
-        }catch(\Throwable $e){
-            return response('error connection redis');
+            Redis::checkRedisConnection();
+            if (!Redis::isUp()) throw new Exception("No Redis Connnection.");
+            return response()->json(["message" => "PONG"], 200);
+        }catch(Throwable $e){
+            return response()->json(["message" => $e->getMessage()], 500);
         }
     }
 
     public function dashboard()
     {
         return view('redis-manager::dashboard.index');
+    }
+
+    public function allFolder()
+    {
+        try{
+            Redis::checkRedisConnection();
+            if (!Redis::isUp()) throw new Exception("No Redis Connnection.");
+            $data = RedisFolder::all();
+            return response()->json([
+                "message" => "ok",
+                "data" => $data
+            ], 200);
+        }catch(Throwable $e){
+            return response()->json(["message" => $e->getMessage()], 500);
+        }
     }
 }

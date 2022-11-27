@@ -4,6 +4,8 @@ namespace Jonreyg\LaravelRedisManager;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Routing\Router;
+use Jonreyg\LaravelRedisManager\Http\Middleware\ForceJsonResponse;
 
 class LaravelRedisManagerServiceProvider extends ServiceProvider
 {
@@ -16,6 +18,7 @@ class LaravelRedisManagerServiceProvider extends ServiceProvider
     {
         $this->publishResources();
         $this->registerRoutes();
+        $this->registerMiddleware();
     }
 
     public function publishResources()
@@ -25,6 +28,10 @@ class LaravelRedisManagerServiceProvider extends ServiceProvider
             $this->publishes([
               __DIR__.'/../config/config.php' => config_path('redis-manager.php'),
             ], 'config');
+
+            $this->publishes([
+                __DIR__.'/../resources/assets' => public_path('redis-manager'),
+              ], 'assets');
         
           }
     }
@@ -37,6 +44,12 @@ class LaravelRedisManagerServiceProvider extends ServiceProvider
     public function registerViews()
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'redis-manager');
+    }
+
+    public function registerMiddleware()
+    {
+        $router = $this->app->make(Router::class);
+        $router->aliasMiddleware('forceJsonResponse', ForceJsonResponse::class);
     }
 
     public function registerRoutes()
@@ -62,7 +75,7 @@ class LaravelRedisManagerServiceProvider extends ServiceProvider
     {
         return [
             'prefix' => 'api/redis-manager',
-            'middleware' => array_merge(config('redis-manager.api_route_middleware', ['api']), ['api']),
+            'middleware' => array_merge(config('redis-manager.api_route_middleware', ['api', 'forceJsonResponse']), ['api', 'forceJsonResponse']),
         ];
     }
 }
