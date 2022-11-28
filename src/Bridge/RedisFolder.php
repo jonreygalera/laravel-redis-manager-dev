@@ -21,6 +21,8 @@ class RedisFolder
     public static function flushFolder($folder_name, $from_redis_folder = false)
     {
         if (!Redis::canProceedOnDown()) {
+            if ($folder_name === (new self)->folder) return;
+
             $keys = Redis::keys("{$folder_name}:*");
             $self = new self;
             if (empty($keys) && (!$from_redis_folder)) {
@@ -39,6 +41,7 @@ class RedisFolder
         if (!Redis::canProceedOnDown()) {
             $self = new self;
             $keys = Redis::keys("{$self->folder}:*");
+
             foreach ($keys as $key) {
                 $folder_name = explode(':', $key);
                 self::flushFolder($folder_name[1], true);
@@ -61,6 +64,17 @@ class RedisFolder
             foreach($keys as $key) {
                 $data[] = Redis::hmget($key, ['folder_name'])[0] ?? '';
             }
+        }
+        
+        return $data;
+    }
+
+    public static function getFolder($folder)
+    {
+        $data = [];
+        if (!Redis::canProceedOnDown()) {
+            $self = new self;
+            $data = Redis::hmget("{$self->folder}:{$folder}", ['folder_name', 'manager', 'folder_description']);
         }
         
         return $data;

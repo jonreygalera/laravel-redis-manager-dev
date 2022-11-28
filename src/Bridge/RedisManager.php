@@ -21,7 +21,6 @@ abstract class RedisManager extends DBLanguage
     protected $field_key_column = [];
 
     public $result = [];
-    protected $save_folder_name = true;
     protected $folder_description = '';
     // protected $skip_empty = true;
     // public $redis_on = true;
@@ -34,9 +33,31 @@ abstract class RedisManager extends DBLanguage
             ->checkFieldKeyColumnProperty()
             ->checkHasKeyProperty();
     
-        if ($this->save_folder_name) {
-            (new RedisFolder)->store([ 'folder_name' => $this->folder, 'folder_description' => $this->folder_description ]);
-        }
+        (new RedisFolder)->store([ 
+            'folder_name' => $this->folder, 
+            'manager' => get_called_class(),
+            'folder_description' => $this->folder_description 
+        ]);
+    }
+
+    public function getColumnList()
+    {
+        return $this->field_key_column;
+    }
+
+    public function getHashKey()
+    {
+        return $this->hash_key;
+    }
+
+    public function getFolderName()
+    {
+        return $this->folder;
+    }
+
+    public function getFolderDescription()
+    {
+        return $this->folder_description;
     }
 
     public function canProceedWhenDown()
