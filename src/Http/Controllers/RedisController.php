@@ -22,7 +22,7 @@ class RedisController extends Controller
 
     public function dashboard()
     {
-        return view('redis-manager::dashboard.index');
+        return view('redis-manager::dashboard');
     }
 
     public function allFolder()
