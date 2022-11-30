@@ -203,12 +203,14 @@ console.log(MaterialUI)
   const Pinger = ({children, handleStatus}) => {
     const [ pinging, setPinging ] = useState(false);
     const [ isErrorShownOnce, setIsErrorShownOnce ] = useState(false);
+    const { setStatus } = React.useContext(RootProvider);
 
     useEffect(() => {
       const pingInterval = setTimeout(async () => {
         if(pinging) return;
         setPinging(true);
         const result = await queryPing();
+        setStatus(result.ok);
         const data = await result.json();
         if(!result.ok) {
           if(!isErrorShownOnce) {
@@ -220,8 +222,6 @@ console.log(MaterialUI)
         }
 
         setPinging(false);
-
-        if (typeof handleStatus === 'function') handleStatus(result.ok);
 
       }, 4000);
 
@@ -335,9 +335,9 @@ console.log(MaterialUI)
     const [ globalLoading, setGlobalLoading ] = useState(true);
 
     return (
-      <RootProvider.Provider value=@{{ globalLoading, setGlobalLoading }}>
+      <RootProvider.Provider value=@{{ globalLoading, setGlobalLoading, status, setStatus }}>
         <ThemeProvider theme={theme}>
-          <Pinger handleStatus={(statusValue) => setStatus(statusValue)}>
+          <Pinger>
             <GlobalDialog open={!Boolean(status) || globalLoading}>
               {
                 Boolean(globalLoading) ? 
