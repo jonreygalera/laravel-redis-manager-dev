@@ -61,7 +61,7 @@ trait Query
         });
 
         if (empty($this->result) && !is_null($fallback)) {
-            $this->fallback($fallback)
+            $this->fallbackCommand($fallback)
                 ->whereCommand($search);
         }
 
@@ -92,7 +92,7 @@ trait Query
         });
 
         if (empty($this->result) && !is_null($fallback)) {
-            $this->fallback($fallback)
+            $this->fallbackCommand($fallback)
                 ->whereCommand($search);
         }
 
@@ -129,7 +129,7 @@ trait Query
         });
 
         if (empty($this->result) && !is_null($fallback)) {
-            $this->fallback($fallback)
+            $this->fallbackCommand($fallback)
                 ->whereCommand($search);
         }
 

@@ -50,6 +50,7 @@ trait Commands
         return $this->ductCommand(function() use($fallback) {
             $new_data = [];
             $keys = $this->keysCommand();
+            
             foreach($keys as $key) {
                 $new_data[] = DataType::parse(Redis::hgetall($key), $this->field_key_column);
             }
@@ -92,6 +93,11 @@ trait Commands
     public function deleteCommand($hash_key_value)
     {
         return Redis::del("{$this->folder}:{$hash_key_value}");
+    }
+
+    public function ttlCommand($hash_key_value)
+    {
+        return Redis::ttl("{$this->folder}:{$hash_key_value}");
     }
 
     public function flushCommand()
