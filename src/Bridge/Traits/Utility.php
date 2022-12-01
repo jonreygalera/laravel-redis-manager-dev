@@ -74,6 +74,7 @@ trait Utility
     {
         if (Redis::canProceedOnDown()) {
             $this->result = ($fallback) ? $fallback($this) : [];
+            return $this;
         } else {
             return $callable($this);
         }

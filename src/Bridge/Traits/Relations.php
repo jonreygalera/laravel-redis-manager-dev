@@ -11,6 +11,12 @@ trait Relations
 {
     public function joinCommand($associate_folder_class, $foreign_key)
     {
+
+        if(Redis::canProceedOnDown()) {
+            $this->result = [];
+            return $this;
+        }
+        
         $associate_folder_instance = new $associate_folder_class;
         if(!($associate_folder_instance instanceof RedisManager)) throw new Exception('Invalid arguments.');
         $associate_folder = $associate_folder_instance->folder;

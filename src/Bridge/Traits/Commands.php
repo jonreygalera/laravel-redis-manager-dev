@@ -87,21 +87,21 @@ trait Commands
     public function existsCommand($hash_key_value)
     {
         $folder = "{$this->folder}:{$hash_key_value}";
-        return boolval(Redis::exists($folder));
+        return Redis::canProceedOnDown() ? false : boolval(Redis::exists($folder));
     }
 
     public function deleteCommand($hash_key_value)
     {
-        return Redis::del("{$this->folder}:{$hash_key_value}");
+        return Redis::canProceedOnDown() ? false : Redis::del("{$this->folder}:{$hash_key_value}");
     }
 
     public function ttlCommand($hash_key_value)
     {
-        return Redis::ttl("{$this->folder}:{$hash_key_value}");
+        return Redis::canProceedOnDown() ? 0 : Redis::ttl("{$this->folder}:{$hash_key_value}");
     }
 
     public function flushCommand()
     {
-        return Redis::flushDB();
+        return Redis::canProceedOnDown() ? false : Redis::flushDB();
     }
 }
