@@ -34,7 +34,11 @@
       ButtonGroup,
       Alert,
       Dialog,
-      DialogContent
+      DialogContent,
+      DialogContentText,
+      DialogActions,
+      DialogTitle,
+      Snackbar
   } = MaterialUI;
 console.log(MaterialUI)
 
@@ -63,7 +67,7 @@ console.log(MaterialUI)
   const fetchFolderDataList = (folderName, params = {}) => fetch(`/api/redis-manager/folder-data-list/${folderName}?${new URLSearchParams(params)}`,);
 
   const flushFolder = (folderName) => fetch(`/api/redis-manager/flush-folder/${folderName}`, { method: 'DELETE'});
-  const flushAllFolder = (folderName) => fetch("/api/redis-manager/flush-all", { method: 'DELETE'});
+  const flushAllFolder = () => fetch("/api/redis-manager/flush-all", { method: 'DELETE'});
 
   const RootProvider = React.createContext({});
 
@@ -241,6 +245,40 @@ console.log(MaterialUI)
         </DialogContent>
       </Dialog>
       );
+  };
+
+
+  const ConfirmationDialog = (props) => {
+    const {
+      message = 'Are you sure?',
+      open = false,
+      onCancel,
+      onConfirm
+    } = props;
+
+    const handleOnCancel = () => {
+      if (typeof onCancel === 'function') onCancel();
+    };
+
+    const handleOnConfirm = (event) => {
+      if (typeof onConfirm === 'function') onConfirm(event);
+    };
+
+    return (
+      <Dialog open={open} onClose={handleOnCancel} >
+        <DialogTitle>Confirmation</DialogTitle>
+        <Divider />
+        <DialogContent >
+          <DialogContentText>
+            { message }
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleOnConfirm} variant="contained" color="success">Yes, Continue</Button>
+          <Button onClick={handleOnCancel} variant="contained" color="error">Cancel</Button>
+        </DialogActions>
+      </Dialog>
+    )
   }
 
   const BaseProvider = (props) => {
@@ -250,8 +288,11 @@ console.log(MaterialUI)
     } = props;
     const [ allFolderData, setAllFolderData ] = useState([]);
     const [ selectedFolder, setSelectedFolder ] = useState('');
+    const [ confirmationMessage, setConfirmationMessage ] = useState("");
+    const [ openConfirmationDialog, setOpenConfirmationDialog ] = useState(false);
+    const [ isDrop, setIsDrop ] = useState(false);
 
-    const { setGlobalLoading } = React.useContext(RootProvider);
+    const { setGlobalLoading, setGlobalSnackbarOpen, setGlobalSnackbarMessage, setGlobalSnackbarSeverity } = React.useContext(RootProvider);
 
     const queryAllFolder = async () => {
       setGlobalLoading(true);
@@ -264,6 +305,55 @@ console.log(MaterialUI)
     const handleOnFolderSelected = (folderValue, e) => {
       setSelectedFolder(folderValue);
       if (typeof onFolderSelected === 'function') onFolderSelected(folderValue);
+    };
+
+    const handleRemoveFolder = (folder) => {
+      setIsDrop(false);
+      setConfirmationMessage(`Do you want to remove '${folder}'?`);
+      setOpenConfirmationDialog(true);
+      setSelectedFolder(folder);
+    };
+
+    const handleDropAllFolder = () => {
+      setIsDrop(true);
+      setConfirmationMessage("Do you want to remove all folder?");
+      setOpenConfirmationDialog(true);
+    };
+
+    const handleOnRemoveFolder = async(event) => {
+      setGlobalLoading(true);
+      const result = await flushFolder(selectedFolder);
+      if (result.ok) {
+        setOpenConfirmationDialog(false);
+        handleOnFolderSelected(null, event);
+        queryAllFolder();
+        setGlobalSnackbarMessage("Success: removed folder");
+        setGlobalSnackbarSeverity("success");
+      } else {
+        setGlobalSnackbarSeverity("error");
+        setGlobalSnackbarMessage("Error: cannot remove folder");
+      }
+
+      setGlobalSnackbarOpen(true);
+      setGlobalLoading(false);
+    };
+
+    const handleOnDropFolder = async(event) => {
+      setGlobalLoading(true);
+      const result = await flushAllFolder();
+      if (result.ok) {
+        setOpenConfirmationDialog(false);
+        handleOnFolderSelected(null, event);
+        queryAllFolder();
+        setGlobalSnackbarMessage("Success: dropped all folder");
+        setGlobalSnackbarSeverity("success");
+      } else {
+        setGlobalSnackbarSeverity("error");
+        setGlobalSnackbarMessage("Error: cannot drop all folder");
+      }
+
+      setGlobalSnackbarOpen(true);
+      setGlobalLoading(false);
     };
 
     useEffect(() => {
@@ -292,7 +382,7 @@ console.log(MaterialUI)
         <Toolbar>
         <ButtonGroup variant="outlined" aria-label="outlined primary button group">
           <Button onClick={(event) => handleOnFolderSelected(null, event)} size="small" color="info" variant="contained" startIcon={<HomeIcon/>}>Home</Button>
-          <Button onClick={() => console.log('yes')} size="small" color="error" variant="contained" startIcon={<DeleteIcon/>}>Drop</Button>
+          <Button onClick={() => handleDropAllFolder()} size="small" color="error" variant="contained" startIcon={<DeleteIcon/>}>Drop</Button>
           <Button onClick={() => queryAllFolder()} color="success" variant="contained" startIcon={<ReloadIcon/>}>Reload</Button>
         </ButtonGroup>
         </Toolbar>
@@ -306,7 +396,7 @@ console.log(MaterialUI)
                   </ListItemIcon>
                   <ListItemText primary={data} />
                   </ListItemButton>
-                  <Button onClick={() => console.log('yes')} size="small" color="error" variant="contained" startIcon={<DeleteIcon/>}>Remove</Button>
+                  <Button onClick={() => handleRemoveFolder(data)} size="small" color="error" variant="contained" startIcon={<DeleteIcon/>}>Remove</Button>
               </ListItem>
             ))}
           </List>
@@ -324,6 +414,13 @@ console.log(MaterialUI)
           <Box p={2} pt={0}>
           { children }
           </Box>
+          <ConfirmationDialog
+            message={confirmationMessage}
+            open={openConfirmationDialog}
+            onCancel={(event) => setOpenConfirmationDialog(false)}
+            onConfirm={isDrop ? handleOnDropFolder : handleOnRemoveFolder}
+          />
+          
         </Box>
       </Box>
     )
@@ -333,9 +430,18 @@ console.log(MaterialUI)
     const [ folder, setFolder ] = useState(null);
     const [ status, setStatus ] = useState(true);
     const [ globalLoading, setGlobalLoading ] = useState(true);
+    const [ globalSnackbarOpen, setGlobalSnackbarOpen ] = useState(false);
+    const [ globalSnackbarMessage, setGlobalSnackbarMessage ] = useState("Success");
+    const [ globalSnackbarSeverity, setGlobalSnackbarSeverity ] = useState("success");
 
     return (
-      <RootProvider.Provider value=@{{ globalLoading, setGlobalLoading, status, setStatus }}>
+      <RootProvider.Provider value=@{{ 
+        globalLoading, setGlobalLoading, 
+        status, setStatus,  
+        globalSnackbarOpen, setGlobalSnackbarOpen,
+        globalSnackbarMessage, setGlobalSnackbarMessage,
+        globalSnackbarSeverity, setGlobalSnackbarSeverity
+      }}>
         <ThemeProvider theme={theme}>
           <Pinger>
             <GlobalDialog open={!Boolean(status) || globalLoading}>
@@ -350,6 +456,13 @@ console.log(MaterialUI)
             </GlobalDialog>
             <BaseProvider onFolderSelected={(folderValue) => setFolder(folderValue)} online={status}>
               <MainApp folder={folder}/>
+              <Snackbar
+                open={globalSnackbarOpen}
+                autoHideDuration={6000}
+                onClose={() => setGlobalSnackbarOpen(false)}
+              >
+                <Alert severity={globalSnackbarSeverity}><strong>{globalSnackbarMessage}</strong></Alert>
+              </Snackbar>
             </BaseProvider>
           </Pinger>
       </ThemeProvider>

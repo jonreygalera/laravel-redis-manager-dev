@@ -32,7 +32,7 @@ class RedisFolder
             }
             if (empty($keys) && $from_redis_folder) return;
             Redis::del($keys);
-            Redis::del("{$self->folder}:{$folder_name}");
+            Redis::del(["{$self->folder}:{$folder_name}"]);
         }
     }
 
@@ -44,11 +44,8 @@ class RedisFolder
 
             foreach ($keys as $key) {
                 $folder_name = explode(':', $key);
-                self::flushFolder($folder_name[1], true);
+                self::flushFolder(end($folder_name), true);
             }
-
-            $keys = Redis::keys("{$self->folder}:*");
-            Redis::del($keys);
         }
 
         return true;
