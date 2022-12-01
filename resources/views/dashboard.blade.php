@@ -38,9 +38,9 @@
       DialogContentText,
       DialogActions,
       DialogTitle,
-      Snackbar
+      Snackbar,
+      Grid
   } = MaterialUI;
-console.log(MaterialUI)
 
   // Create a theme instance.
   const theme = createTheme({
@@ -65,6 +65,7 @@ console.log(MaterialUI)
   const fetchFolderColumn = (folderName) => fetch(`/api/redis-manager/folder-column/${folderName}`);
   const fetchFolderData = (folderName) => fetch(`/api/redis-manager/folder-data/${folderName}`);
   const fetchFolderDataList = (folderName, params = {}) => fetch(`/api/redis-manager/folder-data-list/${folderName}?${new URLSearchParams(params)}`,);
+  const fetchItemInfo = (folderName, params) => fetch(`/api/redis-manager/item-info/${folderName}?${new URLSearchParams(params)}`);
 
   const flushFolder = (folderName) => fetch(`/api/redis-manager/flush-folder/${folderName}`, { method: 'DELETE'});
   const flushAllFolder = () => fetch("/api/redis-manager/flush-all", { method: 'DELETE'});
@@ -77,7 +78,7 @@ console.log(MaterialUI)
             <path d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"></path>
           </SvgIcon>
         );
-      }
+      };
     
   const ReloadIcon = (props) => {
     return (
@@ -85,7 +86,7 @@ console.log(MaterialUI)
       <path d="m19 8-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z"></path>
       </SvgIcon>
     );
-  }
+  };
   
   const DeleteIcon = (props) => {
     return (
@@ -93,7 +94,15 @@ console.log(MaterialUI)
         <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zm2.46-7.12 1.41-1.41L12 12.59l2.12-2.12 1.41 1.41L13.41 14l2.12 2.12-1.41 1.41L12 15.41l-2.12 2.12-1.41-1.41L10.59 14l-2.13-2.12zM15.5 4l-1-1h-5l-1 1H5v2h14V4z"></path>
       </SvgIcon>
     );
-  }
+  };
+
+  const ViewIcon = (props) => {
+    return (
+      <SvgIcon {...props}>
+      <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"></path>
+      </SvgIcon>
+    );
+  };
   
   const HomeIcon = (props) => {
     return (
@@ -101,18 +110,74 @@ console.log(MaterialUI)
         <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
       </SvgIcon>
     );
-  }
+  };
 
 
   const HomeApp = (props) => {
     return (
-      <h1>Hello Hoooman</h1>
+      <h1>🐶: <code>Hello Hoooman!</code></h1>
+    )
+  };
+
+  const ViewItemDialog = (props) => {
+    const {
+      open = false,
+      onClose,
+      item,
+      folder
+    } = props;
+    const { setGlobalLoading } = React.useContext(RootProvider);
+    const [itemData, setItemData] = useState({ ttl: 1});
+
+    const handleOnClose = () => {
+      if (typeof onClose === 'function') onClose();
+    };
+
+    const queryItemInfo = async() => {
+      setGlobalLoading(true);
+
+      const result = await fetchItemInfo(folder, item);
+      const data = await result.json();
+
+      if (result.ok) {
+        setItemData(data);
+      }
+
+      setGlobalLoading(false);
+    }
+
+    useEffect(() => {
+      if(!Boolean(item) || !Boolean(folder)) return;
+      queryItemInfo();
+    }, [item, folder]);
+
+    return (
+      <Dialog open={open} onClose={handleOnClose} maxWidth='lg'>
+        <DialogTitle>View item</DialogTitle>
+        <Divider />
+        <DialogContent >
+          <Box width={500}>
+            <Grid container gap={2}>
+              <Grid item container>
+                <Grid item xs={6}><strong>TTL</strong></Grid>
+                <Grid item xs={6}>{itemData.ttl} sec</Grid>
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Divider />
+          <Button onClick={handleOnClose} variant="contained" color="error">Close</Button>
+        </DialogActions>
+      </Dialog>
     )
   }
 
   const MainApp = (props) => {
     const { folder } = props;
     const [ folderColumn, setFolderColumn ] = useState({});
+    const [ selectedItem, setSelectedItem ] = useState(null);
+    const [ openViewItemDialog, setOpenViewItemDialog ] = useState(null);
     const [ folderData, setFolderData] = useState([]);
     const [ dataTotal, setDataTotal] = useState(0);
     const [ dataModel, setDataModel ] = useState({
@@ -147,6 +212,11 @@ console.log(MaterialUI)
     const handleChangeRowsPerPage = (event, newPage) => handleDataModel({limit: parseInt(event.target.value, 10)});
     const handleOnReloadFolder = (event) => setDataModel({limit: 15, page: 0});
 
+    const handleOnViewItem = (item) => {
+      setSelectedItem(item);
+      setOpenViewItemDialog(true);
+    };
+
     useEffect(() => {
       if(!folder) return;
       queryFolder();
@@ -173,6 +243,8 @@ console.log(MaterialUI)
                     {
                       Object.entries(folderColumn).map((data, key) => <TableCell key={`table-folder-column-${key}`}><strong>{data[0] || ''} ({data[1] || ''})</strong></TableCell>)
                     }
+
+                    <TableCell key="table-folder-column-action"><strong>action</strong></TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -180,8 +252,9 @@ console.log(MaterialUI)
                     folderData.map((row, key) => (
                       <TableRow key={`table-folder-container-${key}`}>
                       {
-                        Object.keys(folderColumn).map((item, key) => <TableCell key={`table-folder-column-${key}`}>{JSON.stringify(row[item] || 'NULL')}</TableCell>)
+                        Object.keys(folderColumn).map((item, key) => <TableCell key={`table-folder-item-${key}`}>{JSON.stringify(row[item] || 'NULL')}</TableCell>)
                       }
+                      <TableCell key="table-folder-item-action"><Button variant="contained" size="small" onClick={() => handleOnViewItem(row)} startIcon={<ViewIcon/>}>Info</Button></TableCell>
                     </TableRow>))
                   }
                 </TableBody>
@@ -200,6 +273,13 @@ console.log(MaterialUI)
             <HomeApp />
           )
         }
+
+        <ViewItemDialog
+          open={openViewItemDialog}
+          onClose={() => setOpenViewItemDialog(false)}
+          item={selectedItem}
+          folder={folder}
+        />
       </Box>
     );
   }
@@ -279,7 +359,7 @@ console.log(MaterialUI)
         </DialogActions>
       </Dialog>
     )
-  }
+  };
 
   const BaseProvider = (props) => {
     const {

@@ -56,6 +56,27 @@ class RedisController extends Controller
         }
     }
 
+    public function itemInfo(Request $request, $folder_name)
+    {
+        try{
+            Redis::checkRedisConnection();
+            if (!Redis::isUp()) throw new Exception("No Redis Connnection.");
+            $data = RedisFolder::getFolder($folder_name);
+
+            $class = $data[1] ?? null;
+            if (is_null($class)) throw new Exception("Folder data is empty.");
+            $object = new $class;
+            $object_hash_key = $object->getHashKey();
+            $hash_key = $request->$object_hash_key;
+            $data = [
+                'ttl' => $object->ttl($hash_key)
+            ];
+            return ApiHelper::responseData($data ?? [], TRUE);
+        }catch(Throwable $e){
+            return ApiHelper::responseError($e->getMessage());
+        }
+    }
+
     public function folderData(Request $request, $folder_name)
     {
         try{
