@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Routing\Router;
 use Jonreyg\LaravelRedisManager\Http\Middleware\ForceJsonResponse;
+use Jonreyg\LaravelRedisManager\Console\Commands\MakeRedisManager;
 
 class LaravelRedisManagerServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,10 @@ class LaravelRedisManagerServiceProvider extends ServiceProvider
         $this->publishResources();
         $this->registerRoutes();
         $this->registerMiddleware();
+
+        if ($this->app->runningInConsole()) {
+            $this->registerCommands();   
+        }
     }
 
     public function publishResources()
@@ -34,6 +39,13 @@ class LaravelRedisManagerServiceProvider extends ServiceProvider
               ], 'assets');
         
           }
+    }
+
+    public function registerCommands()
+    {
+        $this->commands([
+            MakeRedisManager::class
+        ]);
     }
 
     public function registerConfig()
