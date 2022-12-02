@@ -6,10 +6,10 @@ use Jonreyg\LaravelRedisManager\Bridge\RedisManager;
 
 class {{ class }} extends RedisManager
 {
-    protected $folder = "folder_name";
-    protected $hash_key = "id";
+    protected $folder = 'folder_name';
+    protected $hash_key = 'id';
 
     protected $field_key_column = [
-        "id" => "int"
+        'id' => 'int'
     ];
 }
