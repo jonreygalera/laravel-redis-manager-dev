@@ -11,7 +11,7 @@ trait Query
     public function insertCommand(array $data)
     {
         $data = is_multi_array($data) ? $data : [$data];
-        return $this->hmsetCommand($data);
+        return $this->hsetCommand($data);
     }
 
 
@@ -24,7 +24,7 @@ trait Query
 
     public function whereCommand(array $search, callable $fallback = null, bool $is_or = FALSE)
     {
-        $this_data = (empty($this->result)) ? $this->allCommand() : $this->result;
+        $this_data = (empty($this->result)) ? $this->emptyOrAllCommand() : $this->result;
 
         $this->result = array_filter($this_data, function($data) use($search, $is_or) {
             foreach ($search as $key => $value) {
@@ -78,7 +78,7 @@ trait Query
         $this_data = $this->result;
 
         if (empty($this_data)) {
-            $this_data = $this->allCommand();
+            $this_data = $this->emptyOrAllCommand();
         }
 
         $this->result = array_filter($this_data, function($data) use($field_key, $find) {
@@ -104,7 +104,7 @@ trait Query
         $this_data = $this->result;
 
         if (empty($this_data)) {
-            $this_data = $this->allCommand();
+            $this_data = $this->emptyOrAllCommand();
         }
 
         if (gettype($values[0]) != gettype($values[1])) throw new Exception('value must have the same type.');
@@ -135,5 +135,4 @@ trait Query
 
         return $this;
     }
-
 }

@@ -9,7 +9,7 @@ use Exception;
 
 trait Commands
 {    
-    public function hmsetCommand(array $data)
+    public function hsetCommand(array $data)
     {
        return $this->ductCommand(function() use($data) {
             if (!is_array($this->field_key_column)) throw new \Exception("Field key column must be an array.");
@@ -23,8 +23,12 @@ trait Commands
         
                     $save = array_map_key($value, $columns);
                     $set_key = $folder.":{$field_key}";
-        
-                    $pipe->hmset($set_key, $save);
+
+                    foreach ($save as $data_key => $data_value) {
+                        $pipe->hset($set_key, $data_key, $data_value);
+                    }
+
+
         
                     if ($this->with_expiration) {
                         $pipe->expire($set_key, $this->expire_at);
@@ -62,6 +66,18 @@ trait Commands
     public function allCommand(callable $fallback = null)
     {
         return $this->hgetallCommand($fallback);
+    }
+
+    public function emptyOrAllCommand()
+    {
+        $new_data = [];
+        $keys = $this->keysCommand();
+        
+        foreach($keys as $key) {
+            $new_data[] = DataType::parse(Redis::hgetall($key), $this->field_key_column);
+        }
+
+        return $new_data;
     }
 
     public function findCommand($hash_key_value, callable $fallback = null)

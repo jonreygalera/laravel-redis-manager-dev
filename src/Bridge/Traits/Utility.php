@@ -30,13 +30,13 @@ trait Utility
         return $this;
     }
 
-    public function limitCommand($limit_property)
+    public function limitCommand(int $limit_property)
     {
         $this->limit_property = $limit_property;
         return $this;
     }
 
-    public function offsetCommand($offset_property)
+    public function offsetCommand(int $offset_property)
     {
         $this->offset_property = $offset_property;
         $this->offset_page_property = $this->offsetPageGenerator($offset_property, $this->limit_property);
@@ -82,14 +82,45 @@ trait Utility
 
     public function firstCommand($fields = [])
     {
-        return current($this->getCommand($fields)) ? current($this->getCommand($fields)) : null;
+        if (Redis::canProceedOnDown()) return null;
+
+        $this_data = $this->result ?? [];
+        if (
+            (!empty($this->offset_property)) ||
+            (!empty($this->limit_property))
+        ) {
+            $this_data = $this->paginateCommand($this->offset_property ?? 0, $this->limit_property ?? 15, true);
+        } else {
+            if (!empty($this->orderby_property)) {
+                $this_data = (empty($this_data)) ? $this->emptyOrAllCommand() : $this_data;
+                $this_data = $this->orderByBuilder($this_data, $this->orderby_property, $this->sortby_property);
+            }
+        }
+
+        $data = empty($this_data) ? current($this->emptyOrAllCommand()) : current($this_data ?? []);
+
+        return ($data === false) ? null : $data;
     }
 
 
-    public function paginateCommand($offset_property = 0, $limit_property = 15, bool $data_only = false)
+    public function paginateCommand(int $offset_property = 0, int $limit_property = 15, bool $data_only = false)
     {
+
         $result = [];
-        $this_data = (empty($this->result)) ? $this->allCommand() : $this->result;
+
+        $result["total"] = 0;
+        $result["offset"] = (int) 0;
+        $result["limit"] = (int) 15;
+        $result["next_page"] = null;
+        $result["previous_page"] = null;
+        $result["has_next_page"] = true;
+        $result["has_previous_page"] = true;
+        $result["data"] = [];
+
+        return ($data_only) ? $result["data"] : $result;
+
+        if (Redis::canProceedOnDown()) return $result;
+        $this_data = (empty($this->result)) ? $this->emptyOrAllCommand() : $this->result;
     
         if (!empty($this->orderby_property)) {
             $this_data = $this->orderByBuilder($this_data, $this->orderby_property, $this->sortby_property);
@@ -115,16 +146,39 @@ trait Utility
         return ($data_only) ? $result["data"] : $result;
     }
 
-    public function getCommand()
+    public function countCommand()
     {
+        if (Redis::canProceedOnDown()) return 0;
+
         if (
             (!empty($this->offset_property)) ||
             (!empty($this->limit_property))
-        ) return $this->paginateCommand($this->offset_property, $this->limit_property, true);
+        ) return count($this->paginateCommand($this->offset_property ?? 0, $this->limit_property ?? 15, true));
 
         $this_data = $this->result ?? [];
 
         if (!empty($this->orderby_property)) {
+            $this_data = (empty($this->result)) ? $this->emptyOrAllCommand() : $this->result;
+            $this_data = $this->orderByBuilder($this_data, $this->orderby_property, $this->sortby_property);
+        }
+
+        return count($this_data);
+    }
+
+
+    public function getCommand()
+    {
+        if (Redis::canProceedOnDown()) return [];
+
+        if (
+            (!empty($this->offset_property)) ||
+            (!empty($this->limit_property))
+        ) return $this->paginateCommand($this->offset_property ?? 0, $this->limit_property ?? 15, true);
+
+        $this_data = $this->result ?? [];
+
+        if (!empty($this->orderby_property)) {
+            $this_data = (empty($this->result)) ? $this->emptyOrAllCommand() : $this->result;
             $this_data = $this->orderByBuilder($this_data, $this->orderby_property, $this->sortby_property);
         }
         return $this_data;
