@@ -9,12 +9,19 @@ class RedisFolder
     protected $folder = 'redis_folder';
     protected $hash_key = 'folder_name';
 
+    public function __construct()
+    {
+        config(['database.redis.options.prefix' => '']);
+    }
+
     public static function store($data)
     {
         if (!Redis::canProceedOnDown()) {
             $self = new self;
 
-            Redis::hmset("{$self->folder}:" . $data[$self->hash_key], $data);
+            foreach ($data as $data_key => $data_value) {
+                Redis::hset("{$self->folder}:" . $data[$self->hash_key], $data_key, $data_value);
+            }
         }
     }
 
@@ -57,7 +64,7 @@ class RedisFolder
         if (!Redis::canProceedOnDown()) {
             $self = new self;
             $keys = Redis::keys("{$self->folder}:*");
-
+dd(Redis::keys('user:*'));
             foreach($keys as $key) {
                 $data[] = Redis::hmget($key, ['folder_name'])[0] ?? '';
             }
