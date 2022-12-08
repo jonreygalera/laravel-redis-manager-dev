@@ -64,7 +64,7 @@ class RedisFolder
         if (!Redis::canProceedOnDown()) {
             $self = new self;
             $keys = Redis::keys("{$self->folder}:*");
-dd(Redis::keys('user:*'));
+
             foreach($keys as $key) {
                 $data[] = Redis::hmget($key, ['folder_name'])[0] ?? '';
             }
