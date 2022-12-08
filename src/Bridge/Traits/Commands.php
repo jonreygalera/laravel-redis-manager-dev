@@ -30,7 +30,7 @@ trait Commands
 
 
         
-                    if ($this->with_expiration) {
+                    if (filter_var($this->with_expiration, FILTER_VALIDATE_BOOLEAN)) {
                         $pipe->expire($set_key, $this->expire_at);
                     }
                 }

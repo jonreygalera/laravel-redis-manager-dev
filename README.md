@@ -299,8 +299,6 @@ class UserController extends Controller
  
     }
 }
-
-
 ```
 
 ### [#](#) Retrieving data
@@ -589,11 +587,83 @@ class UserController extends Controller
 ```
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### [#](#) Where method
+### [#](#) Expiration method
+
+Adding epiration of data to the redis storage was using the redis function named [expire](https://redis.io/commands/expire/).
+
+By default, the expiration time is `3600` seconds when adding data to redis storage. You may define the expiration time of each data. You must set expiration time before calling the `insert` method.
+
+<strong> Methods </strong>
+```php
+addExpiration(float $seconds)
+expireHours(float $hours)
+expireHour()
+expireHalfHour()
+expireDays(float $days)
+expireDay()
+expireWeek()
+expireWeeks(float $weeks)
+expireMinutes(float $minutes)
+expireMinute()
+expireYears(float $years)
+expireYear()
+```
+<strong>Example</strong>
+```php
+<?php
+ 
+namespace App\Http\Controllers;
+ 
+use App\Http\Controllers\Controller;
+use App\RedisManager\User;
+use Illuminate\Http\Request;
+ 
+class UserController extends Controller
+{
+    /**
+     * Store a new user in the redis database.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+        // Validate the request...
+ 
+        $user = new User;
+ 
+        $user->expireWeek()->insert([
+            'id' => 1,
+            'name' => 'Jiaar'
+        ]);
+        
+        # or
+        # User::expireWeek()->insert([ 'id' => 1, 'name' => 'Jiaar' ]);
+ 
+    }
+}
+```
+
+To ignore the expiration time of the data, you can put the `$with_expiration` property in the redis manager class and set the value to `FALSE`.
+
+```php
+<?php
+
+namespace App\RedisManager;
+
+use Jonreyg\LaravelRedisManager\Bridge\RedisManager;
+
+class User extends RedisManager
+{
+    public $with_expiration = false;
+}
+```
+
+
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### [#](#) Expiration method
+### [#](#) Where method
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

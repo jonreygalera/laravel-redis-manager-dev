@@ -115,11 +115,9 @@ trait Utility
         $result["previous_page"] = null;
         $result["has_next_page"] = true;
         $result["has_previous_page"] = true;
-        $result["data"] = [];
+        $result["data"] = $this->result ?? [];
 
-        return ($data_only) ? $result["data"] : $result;
-
-        if (Redis::canProceedOnDown()) return $result;
+        if (Redis::canProceedOnDown()) return ($data_only) ? $result["data"] : $result;
         $this_data = (empty($this->result)) ? $this->emptyOrAllCommand() : $this->result;
     
         if (!empty($this->orderby_property)) {
@@ -148,7 +146,7 @@ trait Utility
 
     public function countCommand()
     {
-        if (Redis::canProceedOnDown()) return 0;
+        if (Redis::canProceedOnDown()) return count($this->result ?? []);
 
         if (
             (!empty($this->offset_property)) ||
